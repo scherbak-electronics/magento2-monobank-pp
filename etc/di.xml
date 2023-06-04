@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Scherbak Electronics All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Payment Method Facade configuration -->
+    <virtualType name="MonoPaymentGatewayFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">\Shch\Mono\Model\Ui\ConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Shch\Mono\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">MonoPaymentGatewayValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">MonoPaymentGatewayCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Configuration reader -->
+    <virtualType name="MonoPaymentGatewayConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">\Shch\Mono\Model\Ui\ConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Logger -->
+    <virtualType name="MonoPaymentGatewayLogger" type="Magento\Payment\Model\Method\Logger">
+        <arguments>
+            <argument name="config" xsi:type="object">MonoPaymentGatewayConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Shch\Mono\Gateway\Http\Client\Mono">
+        <arguments>
+            <argument name="logger" xsi:type="object">MonoPaymentGatewayLogger</argument>
+        </arguments>
+    </type>
+
+    <!-- Commands -->
+    <virtualType name="MonoPaymentGatewayCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">MonoPaymentGatewayClientValidateCommand</item>
+                <item name="capture" xsi:type="string">MonoPaymentGatewayOrderCreateCommand</item>
+<!--                <item name="order" xsi:type="string">Command</item>-->
+                <item name="refund" xsi:type="string">MonoPaymentGatewayOrderReturnCommand</item>
+<!--                <item name="cancel" xsi:type="string">Command</item>-->
+<!--                <item name="void" xsi:type="string">Command</item>-->
+<!--                <item name="accept_payment" xsi:type="string">Command</item>-->
+<!--                <item name="deny_payment" xsi:type="string">Command</item>-->
+<!--                <item name="initialize" xsi:type="string">Command</item>-->
+<!--                <item name="sale" xsi:type="string">Command</item>-->
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Order Create command -->
+    <virtualType name="MonoPaymentGatewayOrderCreateCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Shch\Mono\Gateway\Request\OrderCreateRequest</argument>
+            <argument name="handler" xsi:type="object">Shch\Mono\Gateway\Response\OrderCreateHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Shch\Mono\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Shch\Mono\Gateway\Http\Client\Mono</argument>
+        </arguments>
+    </virtualType>
+    <!-- Order Create Request -->
+    <type name="Shch\Mono\Gateway\Request\OrderCreateRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">MonoPaymentGatewayConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Client Validate command -->
+    <virtualType name="MonoPaymentGatewayClientValidateCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Shch\Mono\Gateway\Request\ClientValidateRequest</argument>
+            <argument name="handler" xsi:type="object">Shch\Mono\Gateway\Response\ClientValidateHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Shch\Mono\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Shch\Mono\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Shch\Mono\Gateway\Http\Client\Mono</argument>
+        </arguments>
+    </virtualType>
+    <!-- Client Validate Request -->
+    <type name="Shch\Mono\Gateway\Request\ClientValidateRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">MonoPaymentGatewayConfig</argument>
+        </arguments>
+    </type>
+
+    <!-- Order Return command -->
+    <virtualType name="MonoPaymentGatewayOrderReturnCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">Shch\Mono\Gateway\Request\OrderReturnRequest</argument>
+            <argument name="handler" xsi:type="object">Shch\Mono\Gateway\Response\OrderReturnHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Shch\Mono\Gateway\Http\TransferFactory</argument>
+            <argument name="validator" xsi:type="object">Shch\Mono\Gateway\Validator\ResponseCodeValidator</argument>
+            <argument name="client" xsi:type="object">Shch\Mono\Gateway\Http\Client\Mono</argument>
+        </arguments>
+    </virtualType>
+    <!-- Order Return Request -->
+    <type name="Shch\Mono\Gateway\Request\OrderReturnRequest">
+        <arguments>
+            <argument name="config" xsi:type="object">MonoPaymentGatewayConfig</argument>
+        </arguments>
+    </type>
+
+
+    <!-- Value handlers infrastructure -->
+    <virtualType name="MonoPaymentGatewayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">MonoPaymentGatewayConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="MonoPaymentGatewayConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">MonoPaymentGatewayConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Shch\Mono\Block\Info">
+        <arguments>
+            <argument name="config" xsi:type="object">MonoPaymentGatewayConfig</argument>
+        </arguments>
+    </type>
+
+</config>

@@ -1,0 +1,22 @@
+{
+    "name": "shch/module-mono",
+    "description": "Monobank Part Payment",
+    "type": "magento2-module",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Vadim S",
+            "email": "scherbak.electronics@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Shch\\Mono\\": ""
+        }
+    }
+}
