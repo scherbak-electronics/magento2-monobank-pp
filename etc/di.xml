@@ -127,4 +127,10 @@
         </arguments>
     </type>
 
+    <type name="Shch\Mono\Gateway\Http\TransferFactory">
+        <arguments>
+            <argument name="config" xsi:type="object">MonoPaymentGatewayConfig</argument>
+        </arguments>
+    </type>
+
 </config>

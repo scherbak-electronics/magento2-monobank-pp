@@ -5,6 +5,10 @@
  */
 namespace Shch\Mono\Gateway\Http\Client;
 
+use Laminas\Http\Exception\RuntimeException;
+use Magento\Framework\HTTP\LaminasClientFactory;
+use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Payment\Gateway\Http\ClientException;
 use Magento\Payment\Gateway\Http\ClientInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Payment\Model\Method\Logger;
@@ -14,26 +18,28 @@ class Mono implements ClientInterface
     const SUCCESS = 1;
     const FAILURE = 0;
 
-    /**
-     * @var array
-     */
     private array $results = [
         self::SUCCESS,
         self::FAILURE
     ];
 
-    /**
-     * @var Logger
-     */
+    private LaminasClientFactory $clientFactory;
     private Logger $logger;
+    private Json $json;
 
     /**
+     * @param LaminasClientFactory $clientFactory
+     * @param Json $json
      * @param Logger $logger
      */
     public function __construct(
+        LaminasClientFactory $clientFactory,
+        Json   $json,
         Logger $logger
     ) {
         $this->logger = $logger;
+        $this->json = $json;
+        $this->clientFactory = $clientFactory;
     }
 
     /**
@@ -41,18 +47,31 @@ class Mono implements ClientInterface
      *
      * @param TransferInterface $transferObject
      * @return array
+     * @throws ClientException
      */
     public function placeRequest(TransferInterface $transferObject): array
     {
-        $response = [];
+        $log = [
+            'request' => $transferObject->getBody(),
+            'request_uri' => $transferObject->getUri()
+        ];
+        $result = [];
+        $client = $this->clientFactory->create();
+        $client->setOptions($transferObject->getClientConfig());
+        $client->setMethod($transferObject->getMethod());
+        $client->setHeaders($transferObject->getHeaders());
+        $client->setUri($transferObject->getUri());
 
-        $this->logger->debug(
-            [
-                'request' => $transferObject->getBody(),
-                'response' => $response
-            ]
-        );
+        try {
+            $response = $client->send();
+            $result = $response->getBody();
+            $log['response'] = $result;
+        } catch (RuntimeException $e) {
+            throw new ClientException(__($e->getMessage()));
+        } finally {
+            $this->logger->debug($log);
+        }
 
-        return $response;
+        return $this->json->unserialize($result);
     }
 }
